@@ -1,0 +1,9 @@
+docker tag local-image:tagname new-repo:tagname
+docker push new-repo:tagname
+docker push alexlux58/node-hello-world:tagname
+
+docker build -t feedback-node .
+docker run -p 3080:80 -d --name feedback-app --rm feedback-node
+
+docker ps -a
+docker images

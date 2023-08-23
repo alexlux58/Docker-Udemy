@@ -2,8 +2,63 @@ docker tag local-image:tagname new-repo:tagname
 docker push new-repo:tagname
 docker push alexlux58/node-hello-world:tagname
 
-docker build -t feedback-node .
-docker run -p 3080:80 -d --name feedback-app --rm feedback-node
+- docker build -t feedback-node .
+- docker run -p 3080:80 -d --name feedback-app --rm feedback-node
 
-docker ps -a
-docker images
+- docker ps -a
+- docker images
+
+If you don't always want to copy and use the full path, you can use these shortcuts:
+
+macOS / Linux: -v $(pwd):/app
+Windows: -v "%cd%":/app
+
+# Anonymous Volumes
+
+Anonymous volumes are created and managed by Docker itself. They don't have a specific source, so their data is stored in a unique location on the host machine. They're often used for temporary data that doesn't need to persist.
+
+docker run -v /path/in/container my-image
+
+# Named Voumes
+
+Named volumes are a more managed and preferred way to handle Docker volumes. They have specific names, making them easier to identify, and they persist across container restarts and removal.
+
+Create the named volume:
+docker volume create my-volume
+
+Run a container using the named volume:
+docker run -v my-volume:/path/in/container my-image
+
+# Bind Mounts
+
+Bind mounts are used to mount a file or directory from the host machine into a container. This enables direct access to the host machine's file system from within the container.
+
+docker run -v /path/on/host:/path/in/container my-image
+
+# Read Only Volume
+
+Create a read-only volume (either named or anonymous) by appending :ro to the volume mount flag. Here's how you can do that for different types of volumes:
+
+- Read-Only Anonymous Volume
+docker run -v /path/in/container:ro my-image
+
+- Read-Only Named Volume
+docker volume create my-volume
+docker run -v my-volume:/path/in/container:ro my-image
+
+- Read-Only Bind Mount
+docker run -v /path/on/host:/path/in/container:ro my-image
+
+
+
+
+
+
+
+
+
+
+
+
+
+

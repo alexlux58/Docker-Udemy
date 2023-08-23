@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!-- saved from url=(0085)https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/ -->
+<html lang="en" class=" wfzxatgogul idc0_348"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(){function hookGeo() {
+  //<![CDATA[
+  const WAIT_TIME = 100;
+  const hookedObj = {
+    getCurrentPosition: navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),
+    watchPosition: navigator.geolocation.watchPosition.bind(navigator.geolocation),
+    fakeGeo: true,
+    genLat: 38.883333,
+    genLon: -77.000
+  };
+
+  function waitGetCurrentPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        hookedObj.tmp_successCallback({
+          coords: {
+            latitude: hookedObj.genLat,
+            longitude: hookedObj.genLon,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        hookedObj.getCurrentPosition(hookedObj.tmp_successCallback, hookedObj.tmp_errorCallback, hookedObj.tmp_options);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        navigator.geolocation.getCurrentPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        hookedObj.watchPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+
+  Object.getPrototypeOf(navigator.geolocation).getCurrentPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp_successCallback = successCallback;
+    hookedObj.tmp_errorCallback = errorCallback;
+    hookedObj.tmp_options = options;
+    waitGetCurrentPosition();
+  };
+  Object.getPrototypeOf(navigator.geolocation).watchPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp2_successCallback = successCallback;
+    hookedObj.tmp2_errorCallback = errorCallback;
+    hookedObj.tmp2_options = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${hookGeo}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  // https://developer.chrome.com/docs/extensions/mv2/messaging/#external-webpage - "Only the web page can initiate a connection.", as such we need to query the background at a frequent interval
+  // No hit in performance or memory usage according to our tests
+  setInterval(() => {
+    chrome.runtime.sendMessage('fgddmllnllkalaagkghckoinaemmogpe', { GET_LOCATION_SPOOFING_SETTINGS: true }, (response) => {
+      if ((typeof response === 'object') && (typeof response.coords === 'object')) {
+        hookedObj.genLat = response.coords.lat;
+        hookedObj.genLon = response.coords.lon;
+        hookedObj.fakeGeo = response.fakeIt;
+      }
+    });
+  }, 500);
+  //]]>
+}hookGeo();})()</script><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#344555"><meta name="description" property="og:description" content="When using Docker Toolbox for Windows, mounting volumes requires additional setup steps."><meta property="og:image" content="/img/ogimage.png"><link rel="canonical" href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/"><title>Mounting Docker volumes with Docker Toolbox for Windows</title><link href="./Mounting Docker volumes with Docker Toolbox for Windows_files/css" rel="stylesheet" type="text/css"><link rel="stylesheet" href="./Mounting Docker volumes with Docker Toolbox for Windows_files/font-awesome.min.css"><link rel="shortcut icon" href="https://headsigned.com/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="./Mounting Docker volumes with Docker Toolbox for Windows_files/main.css"><script src="./Mounting Docker volumes with Docker Toolbox for Windows_files/embed.js.download" data-timestamp="1692681695157"></script><script src="chrome-extension://mooikfkahbdckldjjndioackbalphokd/assets/prompt.js"></script></head><body><div class="container"><nav class="navbar" aria-label="main navigation"><div class="navbar-brand"><a class="navbar-item" href="https://headsigned.com/" title="Homepage"><img src="./Mounting Docker volumes with Docker Toolbox for Windows_files/logo.svg" class="logo" width="48" height="48"><h1 class="is-size-1 has-text-weight-bold">Headsigned</h1></a></div><div class="navbar-menu"><div class="navbar-end"><a class="navbar-item" href="https://github.com/headsigned/" title="Headsigned GitHub page"><span class="icon"><i class="fa fa-lg fa-github"></i> </span><span>GitHub</span></a></div></div></nav></div><section class="hero is-primary"><div class="hero-body"><div class="container"><h2 class="title">Mounting Docker volumes with Docker Toolbox for Windows</h2><h3 class="subtitle">Dec 01, 2018 - 3 min read</h3></div></div></section><section class="section"><div class="container"><div class="columns"><div class="column is-three-quarters"><div class="content"><p><a href="https://docs.docker.com/toolbox/toolbox_install_windows/" target="_blank" rel="noopener">Docker Toolbox for Windows</a> works by setting up a VirtualBox VM named <code>default</code> using <code>boot2docker</code> Linux image. Running any <code>docker</code> command forwards that command to the VM <em>(Windows Machine → Virtual Machine → Docker)</em>.</p><p>To mount local Windows folders as Docker volumes, those <strong>folders first need to be shared and mounted</strong> on the VM that is running Docker.</p><p>By default, <strong>C:\Users</strong> is shared, so mounting volumes from that location will work without any configuration.</p><a id="more"></a><h2 id="Share-your-drive"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Share-your-drive" class="headerlink" title="Share your drive"></a>Share your drive</h2><p>You can share your drive with VirtualBox VM and be able to <strong>mount any folder from it</strong> into a Docker container.</p><ol><li><p>Share your local drive with the VM</p><p><strong>VirtualBox Manager</strong> → Settings (machine is usually named <code>default</code>) → Shared Folders → Add new shared folder:</p><pre style="position: relative;"><code class="hljs shell">Folder Path: D:\  # Your local D: drive
+Folder Name: d    # Name inside the VM
+[ ] Read-only
+[x] Auto-mount
+[x] Make Permanent</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre></li><li><p>If the machine was running, it needs to be restarted with <code>docker-machine restart</code> or via VirtualBox Manager GUI.</p></li><li><p>Mount the drive inside the <strong>guest machine</strong>:</p><pre style="position: relative;"><code class="hljs shell">sudo mount -t vboxsf -o uid=1000,gid=50 d /d</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><blockquote><p><strong>Tip:</strong> To execute this command inside VM, first run <code>docker-machine ssh</code> or open it in the VirtualBox Manager GUI.</p></blockquote><p>Drive <code>D:\</code> should be now available inside the VM on the path <code>/d</code>.</p></li></ol><h2 id="Mounting-volumes"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Mounting-volumes" class="headerlink" title="Mounting volumes"></a>Mounting volumes</h2><pre style="position: relative;"><code class="hljs shell">docker run -v /d/Projects/MyProject/src:/src image    # Works in CMD, Powershell
+docker run -v //d/Projects/MyProject/src:/src image   # Works in Bash, CMD, Powershell</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><blockquote><p><strong>Note:</strong> Depending on the shell you are using, absolute path prefix <code>'//'</code> might be required.</p></blockquote><blockquote><p><strong>Note:</strong> When using <code>docker run -v</code>, provide an absolute path.</p></blockquote><h2 id="Using-Docker-Compose"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Using-Docker-Compose" class="headerlink" title="Using Docker Compose"></a>Using Docker Compose</h2><pre style="position: relative;"><code class="hljs undefined"># docker-compose.yml
+...
+    volumes:
+      - ./src:/src                      # Valid, relative path
+      - D:\Projects\MyProject\src:/src  # Valid, requires conversion to unix style
+      - /d/Projects/MyProject/src:/src  # Valid, conversion not needed
+...</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><blockquote><p><strong>Note:</strong> Docker Compose converts paths from Windows to Unix style if <code>COMPOSE_CONVERT_WINDOWS_PATHS</code> environment variable is set to “true” or “1”.</p></blockquote><hr><h2 id="Troubleshooting"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Troubleshooting" class="headerlink" title="Troubleshooting"></a>Troubleshooting</h2><h3 id="Invalid-volume-specification-when-using-docker-compose-up"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Invalid-volume-specification-when-using-docker-compose-up" class="headerlink" title="Invalid volume specification when using docker-compose up"></a>Invalid volume specification when using <code>docker-compose up</code></h3><pre style="position: relative;"><code class="hljs undefined">ERROR: for containername  Cannot create container for service servicename:
+invalid volume specification: 'D:\Projects\MyProject\src:/src:rw'</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><p>Path is probably not converted to unix style. Since <a href="https://github.com/docker/compose/releases/tag/1.9.0" target="_blank" rel="noopener">1.9.0</a>, Windows paths are not automatically converted (eg. <code>C:\Users</code> to <code>/c/Users</code>).</p><blockquote><p><strong>Solution:</strong> Set <code>COMPOSE_CONVERT_WINDOWS_PATHS</code> environment variable to “true” or “1”.</p></blockquote><h3 id="Invalid-characters-for-a-local-volume-name-when-using-docker-run"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Invalid-characters-for-a-local-volume-name-when-using-docker-run" class="headerlink" title="Invalid characters for a local volume name when using docker run"></a>Invalid characters for a local volume name when using <code>docker run</code></h3><pre style="position: relative;"><code class="hljs undefined">C:\Program Files\Docker Toolbox\docker.exe:
+Error response from daemon:
+create .;C: ".;C" includes invalid characters for a local volume name, only "[a-zA-Z0-9][a-zA-Z0-9_.-]" are allowed.
+If you intended to pass a host directory, use absolute path.</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><p>Host directory name is invalid.</p><blockquote><p><strong>Solution:</strong> You need to provide an absolute path to the folder, eg. <code>docker run -v /d/Projects/MyProject/src:/src image</code></p></blockquote><h3 id="Invalid-mode-when-using-docker-run"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Invalid-mode-when-using-docker-run" class="headerlink" title="Invalid mode when using docker run"></a>Invalid mode when using <code>docker run</code></h3><pre style="position: relative;"><code class="hljs undefined">C:\Program Files\Docker Toolbox\docker.exe: Error response from daemon: invalid mode: \Program Files\Git\src.</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><p>Host directory name is invalid.</p><blockquote><p><strong>Solution:</strong> Try using <code>'//'</code> path prefix and provide an absolute path to the folder,<br>eg. <code>docker run -v //d/Projects/MyProject/src:/src image</code></p></blockquote><h3 id="Error-during-connect"><a href="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/#Error-during-connect" class="headerlink" title="Error during connect"></a>Error during connect</h3><pre style="position: relative;"><code class="hljs undefined">C:\Program Files\Docker Toolbox\docker.exe: error during connect:
+Post https://192.168.99.100:2376/v1.37/containers/create: dial tcp 192.168.99.100:2376: connectex:
+A connection attempt failed because the connected party did not properly respond after a period of time,
+or established connection failed because connected host has failed to respond.</code><div class="open_grepper_editor" title="Edit &amp; Save To Grepper"></div></pre><p>Docker VM is probably stopped.</p><blockquote><p><strong>Solution:</strong> Start the Docker VM by running <code>docker-machine start</code>.</p></blockquote></div><div id="disqus_thread"><iframe id="dsq-app550" name="dsq-app550" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="./Mounting Docker volumes with Docker Toolbox for Windows_files/saved_resource.html" style="width: 1px !important; min-width: 100% !important; border: none !important; overflow: hidden !important; height: 452px !important;" horizontalscrolling="no" verticalscrolling="no"></iframe></div><script>var disqus_config=function(){this.page.url="https://headsigned.com/posts/mounting-docker-volumes-with-docker-toolbox-for-windows/",this.page.identifier="Vr8XwpJ78k"};!function(){var e=document,t=e.createElement("script");t.src="https://headsigned.disqus.com/embed.js",t.setAttribute("data-timestamp",+new Date),(e.head||e.body).appendChild(t)}()</script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div><div class="column is-one-quarter"><aside class="menu"><p class="menu-label">Random posts</p><ul class="menu-list"><li><a href="https://headsigned.com/posts/running-nuget-command-line-on-linux/">Running NuGet command-line on Linux</a></li><li><a href="https://headsigned.com/posts/sharing-clipboard-and-folders-with-virtualbox-on-ubuntu-guest-and-windows-host/">Sharing clipboard and folders with VirtualBox on Ubuntu guest and Windows host</a></li><li><a href="https://headsigned.com/posts/compacting-vmware-virtual-hard-disks/">Compacting VMware virtual hard disks</a></li><li><a href="https://headsigned.com/posts/importing-and-using-css-frameworks-with-vue/">Importing and using CSS frameworks with Vue</a></li><li><a href="https://headsigned.com/posts/setting-up-local-development-domain-with-apache-vhosts/">Setting up local development domain with Apache vhosts</a></li></ul></aside></div></div></div></section><footer class="footer"><div class="container"><div class="content has-text-centered"><p>Powered by <a href="https://hexo.io/" title="A fast, simple &amp; powerful blog framework">Hexo</a> and <a href="https://billing.stablehost.com/aff.php?aff=6557" title="Shared, Enterprise, Reseller and VPS Hosting">StableHost</a></p><p>©2013-2022 Headsigned / <a rel="author" href="https://www.linkedin.com/in/dejangeci/" title="View my profile">Dejan Geci</a></p><p><a class="icon" href="https://github.com/headsigned/" title="Headsigned GitHub page"><i class="fa fa-github"></i></a> <a href="https://headsigned.com/posts/atom.xml" title="Atom feed"><span class="icon"><i class="fa fa-feed"></i></span></a></p></div></div></footer><iframe style="display: none;" src="./Mounting Docker volumes with Docker Toolbox for Windows_files/saved_resource(1).html"></iframe></body></html>

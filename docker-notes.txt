@@ -13,13 +13,13 @@ If you don't always want to copy and use the full path, you can use these shortc
 macOS / Linux: -v $(pwd):/app
 Windows: -v "%cd%":/app
 
-# Anonymous Volumes
+######################## Anonymous Volumes ########################
 
 Anonymous volumes are created and managed by Docker itself. They don't have a specific source, so their data is stored in a unique location on the host machine. They're often used for temporary data that doesn't need to persist.
 
 docker run -v /path/in/container my-image
 
-# Named Voumes
+######################## Named Voumes ########################
 
 Named volumes are a more managed and preferred way to handle Docker volumes. They have specific names, making them easier to identify, and they persist across container restarts and removal.
 
@@ -29,13 +29,13 @@ docker volume create my-volume
 Run a container using the named volume:
 docker run -v my-volume:/path/in/container my-image
 
-# Bind Mounts
+######################### Bind Mounts ########################
 
 Bind mounts are used to mount a file or directory from the host machine into a container. This enables direct access to the host machine's file system from within the container.
 
 docker run -v /path/on/host:/path/in/container my-image
 
-# Read Only Volume
+######################### Read Only Volume ########################
 
 Create a read-only volume (either named or anonymous) by appending :ro to the volume mount flag. Here's how you can do that for different types of volumes:
 

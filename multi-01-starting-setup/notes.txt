@@ -1,0 +1,71 @@
+***---------- Building Multi Container Application With Docker ----------***
+
+(Database)
+docker run --name mongodb --rm -d -p 27017:27017 mongo
+
+(Backend - build image)
+docker build -t goals-node .
+
+(Backend - run container based on image)
+docker run --name goals-backend --rm -p 80:80 -d goals-node
+
+The hostname host.docker.internal is a special DNS name that resolves to the internal IP address used by the host machine. 
+This allows you to access services running on the host machine from inside a Docker container
+
+- mongodb://localhost:27117/course-goals -> mongodb://host.docker.internal:27117/course-goals
+
+Allows to connect to the MongoDB server running on host machine from within a Docker container.
+
+
+(Frontend - build image)
+docker build -t goals-react .
+
+(Frontend - run container based on image)
+docker run --name goals-frontend --rm -d -p 3001:3000 -it goals-react
+
+--------------------------------- Create network for application -----------------------------------------------
+
+docker network create goals-net
+
+(Database)
+docker run --name mongodb --rm -d --network goals-net mongo
+
+(Backend - run container based on image)
+docker run --name goals-backend --rm -d -p 80:80 --network goals-net goals-node
+
+- mongodb://host.docker.internal:27117/course-goals -> mongodb://mongodb:27117/course-goals
+
+(Frontend - run container based on image)
+
+No need for network for frontend because it runs on browser: 
+docker run --name goals-frontend --rm -d --network goals-net -it goals-react
+
+Run it like this: 
+docker run --name goals-frontend --rm -d -p 3001:3000 -it goals-react
+
+---------------------------------- Adding persistance to MongoDB with Volumes ----------------------------------------------
+
+(Database)
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net mongo
+
+---------------------------------- Adding authentication to MongoDB ----------------------------------------------
+
+(Database)
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=alex -e MONGO_INITDB_ROOT_PASSWORD=secret mongo
+
+(app.js)
+mongodb://alex:secret@mongodb:27017/course-goals?authSource=admin
+
+---------------------------------- Adding persistance to Backend with Volumes ----------------------------------------------
+
+(Backend)
+docker run --name goals-backend -v C:\Users\alexl\Desktop\Docker-Udemy\Docker-Udemy\multi-01-starting-setup\backend:/app 
+-v logs:/app/logs -v /app/node_modules --rm -d -p 80:80 --network goals-net goals-node
+
+---------------------------------- Adding Live Source Code Updates to Frontend with Bind Mount ----------------------------------------------
+
+(Frontend)
+docker run -v C:\Users\alexl\Desktop\Docker-Udemy\Docker-Udemy\multi-01-starting-setup\frontend\src:/app/src --name goals-frontend --rm -d -p 3001:3000 -it goals-react
+
+
+
